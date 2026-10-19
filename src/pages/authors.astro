@@ -1,0 +1,39 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { authors, posts } from '../lib/wordpress';
+import { authorPath } from '../lib/content';
+---
+
+<Layout
+  title="Our writers"
+  description="Meet the people behind Bchu Runway's fashion and lifestyle stories."
+>
+  <div class="container">
+    <header class="page-heading">
+      <p class="eyebrow">BEHIND THE BYLINE</p>
+      <h1>
+        Our <em>writers.</em>
+      </h1>
+      <p>The people and perspectives behind the journal.</p>
+    </header>
+    <div class="writer-grid">
+      {authors.map((author) => (
+        <article>
+          <span class="writer-initial" aria-hidden="true">
+            {author.name.slice(0, 1).toUpperCase()}
+          </span>
+          <h2>
+            <a href={authorPath(author)}>{author.name}</a>
+          </h2>
+          <p>
+            {author.description ||
+              'Fashion, inspiration, and stories from the Bchu Runway team.'}
+          </p>
+          <a href={authorPath(author)}>
+            {posts.filter((p) => p.author.id === author.id).length} stories ↗
+          </a>
+        </article>
+      ))}
+    </div>
+  </div>
+</Layout>

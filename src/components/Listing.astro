@@ -1,0 +1,114 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PostCard from './PostCard.astro';
+import type { Post, Author } from '../lib/content';
+interface Props {
+  posts: Post[];
+  title: string;
+  description?: string;
+  current: number;
+  total: number;
+  base: string;
+  home?: boolean;
+  author?: Author;
+}
+const {
+  posts,
+  title,
+  description,
+  current,
+  total,
+  base,
+  home = false,
+  author,
+} = Astro.props;
+const href = (n: number) => (n === 1 ? base : `${base}page/${n}/`);
+const feature = home && current === 1 ? posts[0] : undefined;
+const cards = feature ? posts.slice(1) : posts;
+---
+
+<Layout
+  title={current > 1 ? `${title} - Page ${current}` : title}
+  description={description}
+>
+  <div class="container">
+    <section class:list={['page-heading', { 'journal-heading': home }]}>
+      <h1>
+        {home ? (
+          <>
+            The <em>Journal.</em>
+          </>
+        ) : (
+          title
+        )}
+      </h1>
+      <p>
+        {description ||
+          'Fresh perspectives. Timeless inspiration. A little something for your next look.'}
+      </p>
+      {author && (
+        <span class="author-count">{posts.length} stories on this page</span>
+      )}
+    </section>
+    {feature && <PostCard post={feature} featured priority />}
+    <div class="section-heading">
+      <h2>{home ? 'The latest edit' : 'Stories to explore'}</h2>
+      <span>{current > 1 ? `PAGE ${current}` : 'A FRESH PERSPECTIVE'}</span>
+    </div>
+    <section class="post-grid" aria-label="Articles">
+      {cards.map((post) => (
+        <PostCard post={post} />
+      ))}
+    </section>
+    {posts.length === 0 && (
+      <p class="empty-state">New stories are on their way. Check back soon.</p>
+    )}
+    {total > 1 && (
+      <nav class="pagination" aria-label="Pagination">
+        {current > 1 ? (
+          <a rel="prev" href={href(current - 1)}>
+            ← Previous
+          </a>
+        ) : (
+          <span />
+        )}
+        <div>
+          {Array.from({ length: total }, (_, i) => i + 1)
+            .filter((n) => n === 1 || n === total || Math.abs(n - current) <= 1)
+            .map((n, i, list) => (
+              <>
+                {i > 0 && n - list[i - 1] > 1 && <span>…</span>}
+                <a
+                  href={href(n)}
+                  aria-label={`Page ${n}`}
+                  aria-current={n === current ? 'page' : undefined}
+                >
+                  {n}
+                </a>
+              </>
+            ))}
+        </div>
+        {current < total ? (
+          <a rel="next" href={href(current + 1)}>
+            Next →
+          </a>
+        ) : (
+          <span />
+        )}
+      </nav>
+    )}
+    {home && (
+      <aside class="editorial-note">
+        <p class="eyebrow">LESS BUYING. MORE POSSIBILITY.</p>
+        <h2>
+          Your next great look
+          <br />
+          is waiting to <em>happen.</em>
+        </h2>
+        <a class="button" href="https://www.bchurunway.com/">
+          Explore the wardrobe ↗
+        </a>
+      </aside>
+    )}
+  </div>
+</Layout>

@@ -1,0 +1,13 @@
+---
+import Listing from '../components/Listing.astro';
+import { posts, PAGE_SIZE } from '../lib/wordpress';
+---
+
+<Listing
+  posts={posts.slice(0, PAGE_SIZE)}
+  title="The Journal | Bchu Runway"
+  current={1}
+  total={Math.ceil(posts.length / PAGE_SIZE)}
+  base="/"
+  home
+/>

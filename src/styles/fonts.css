@@ -1,0 +1,43 @@
+@font-face {
+  font-family: Montserrat;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url(/fonts/montserrat-latin-variable.woff2) format('woff2');
+  unicode-range:
+    U+0000-00FF, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308,
+    U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF,
+    U+FFFD;
+}
+@font-face {
+  font-family: Prompt;
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/prompt-thai-400.woff2) format('woff2');
+  unicode-range: U+2D7, U+303, U+331, U+E01-E5B, U+200C-200D, U+25CC;
+}
+@font-face {
+  font-family: Prompt;
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(/fonts/prompt-thai-500.woff2) format('woff2');
+  unicode-range: U+2D7, U+303, U+331, U+E01-E5B, U+200C-200D, U+25CC;
+}
+@font-face {
+  font-family: Prompt;
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(/fonts/prompt-thai-600.woff2) format('woff2');
+  unicode-range: U+2D7, U+303, U+331, U+E01-E5B, U+200C-200D, U+25CC;
+}
+@font-face {
+  font-family: Prompt;
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(/fonts/prompt-thai-700.woff2) format('woff2');
+  unicode-range: U+2D7, U+303, U+331, U+E01-E5B, U+200C-200D, U+25CC;
+}

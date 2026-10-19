@@ -1,0 +1,209 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Listing from '../components/Listing.astro';
+import PostCard from '../components/PostCard.astro';
+import { posts, authors, categories, tags, PAGE_SIZE } from '../lib/wordpress';
+import {
+  relatedPosts,
+  authorPath,
+  termPath,
+  dateLabel,
+  type Post,
+  type Author,
+} from '../lib/content';
+interface Props {
+  post?: Post;
+  items?: Post[];
+  title?: string;
+  description?: string;
+  current?: number;
+  total?: number;
+  base?: string;
+  home?: boolean;
+  author?: Author;
+}
+export function getStaticPaths() {
+  const routes: { params: { path: string }; props: Props }[] = posts.map(
+    (post) => ({ params: { path: post.path.slice(1, -1) }, props: { post } }),
+  );
+  function listing(
+    items: Post[],
+    base: string,
+    title: string,
+    description?: string,
+    author?: Author,
+  ) {
+    const total = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+    for (let current = 1; current <= total; current++) {
+      if (base === '/' && current === 1) continue;
+      const path = current === 1 ? base : `${base}page/${current}/`;
+      routes.push({
+        params: { path: decodeURI(path.slice(1, -1)) },
+        props: {
+          items: items.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE),
+          title,
+          description,
+          current,
+          total,
+          base,
+          home: base === '/',
+          author,
+        },
+      });
+    }
+  }
+  listing(posts, '/', 'The Journal | Bchu Runway');
+  for (const author of authors)
+    listing(
+      posts.filter((p) => p.author.id === author.id),
+      authorPath(author),
+      author.name,
+      author.description || `Style stories and inspiration by ${author.name}.`,
+      author,
+    );
+  for (const term of [...categories, ...tags])
+    listing(
+      posts.filter((p) =>
+        [...p.tags, ...p.categories].some(
+          (t) => t.id === term.id && t.taxonomy === term.taxonomy,
+        ),
+      ),
+      termPath(term),
+      term.name,
+      `Explore ${term.name}: stories, inspiration, and the latest from Bchu Runway.`,
+    );
+  const seen = new Set(['authors', '404']);
+  for (const route of routes) {
+    if (seen.has(route.params.path))
+      throw new Error(`Route collision: ${route.params.path}`);
+    seen.add(route.params.path);
+  }
+  return routes;
+}
+const {
+  post,
+  items = [],
+  title = '',
+  description,
+  current = 1,
+  total = 1,
+  base = '/',
+  home,
+  author,
+} = Astro.props;
+const related = post ? relatedPosts(post, posts) : [];
+const absolute = (path: string) => new URL(path, Astro.site).href;
+const schema = post
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: post.title,
+      description: post.description,
+      datePublished: post.published,
+      dateModified: post.modified,
+      inLanguage: 'th',
+      mainEntityOfPage: absolute(post.path),
+      image: post.image ? [post.image.src] : undefined,
+      author: {
+        '@type': 'Person',
+        name: post.author.name,
+        url: absolute(authorPath(post.author)),
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Bchu Runway',
+        url: 'https://www.bchurunway.com/',
+      },
+    }
+  : undefined;
+---
+
+{post ? (
+  <Layout
+    title={post.seoTitle}
+    description={post.description}
+    image={post.image?.src}
+    type="article"
+    schema={schema}
+    noindex={post.noindex}
+  >
+    <article class="article container">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Journal</a>
+        <span>/</span>
+        {post.categories[0] && (
+          <a href={termPath(post.categories[0])}>{post.categories[0].name}</a>
+        )}
+      </nav>
+      <header class="article-header">
+        <p class="eyebrow">
+          THE BCHU EDIT <span>· {post.minutes} MIN READ</span>
+        </p>
+        <h1>{post.title}</h1>
+        <div class="byline">
+          By <a href={authorPath(post.author)}>{post.author.name}</a>
+          <span>·</span>
+          <time datetime={post.published}>{dateLabel(post.published)}</time>
+        </div>
+        {post.modified.slice(0, 10) !== post.published.slice(0, 10) && (
+          <p class="updated">
+            Updated{' '}
+            <time datetime={post.modified}>{dateLabel(post.modified)}</time>
+          </p>
+        )}
+      </header>
+      {post.image && (
+        <img
+          class="article-cover"
+          src={post.image.src}
+          srcset={post.image.srcset || undefined}
+          sizes="(max-width: 1200px) 100vw, 1200px"
+          width={post.image.width}
+          height={post.image.height}
+          alt={post.image.alt}
+          fetchpriority="high"
+        />
+      )}
+      <div class="article-body" set:html={post.html} />
+      <div class="article-end">
+        <div class="tag-list">
+          {post.tags.map((tag) => (
+            <a href={termPath(tag)}>#{tag.name}</a>
+          ))}
+        </div>
+        <div class="author-bio">
+          <p class="eyebrow">WRITTEN BY</p>
+          <h2>
+            <a href={authorPath(post.author)}>{post.author.name}</a>
+          </h2>
+          {post.author.description && <p>{post.author.description}</p>}
+          <a href={authorPath(post.author)}>Read more stories ↗</a>
+        </div>
+      </div>
+    </article>
+    {related.length > 0 && (
+      <section class="container related">
+        <div class="section-heading">
+          <h2>A little more inspiration</h2>
+          <a href="/">All stories ↗</a>
+        </div>
+        <div class="post-grid">
+          {related.map((item) => (
+            <PostCard post={item} />
+          ))}
+        </div>
+      </section>
+    )}
+  </Layout>
+) : (
+  <Listing
+    posts={items}
+    title={title}
+    description={description}
+    current={current}
+    total={total}
+    base={base}
+    home={home}
+    author={author}
+  />
+)}

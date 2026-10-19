@@ -1,0 +1,179 @@
+---
+import '../styles/global.css';
+import { categories, posts } from '../lib/wordpress';
+import { termPath } from '../lib/content';
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  type?: 'website' | 'article';
+  noindex?: boolean;
+  schema?: Record<string, unknown>;
+}
+const {
+  title,
+  description = 'Style inspiration, designer stories, and a fresh perspective on dressing for every occasion. The journal by Bchu Runway.',
+  image,
+  type = 'website',
+  noindex = false,
+  schema,
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const socialImage =
+  image ||
+  posts.find((post) => post.image)?.image?.src ||
+  new URL('/social.svg', Astro.site).href;
+const nav = categories.filter((t) => t.slug !== 'uncategorized').slice(0, 5);
+---
+
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title.includes('Bchu Runway') ? title : `${title} | Bchu Runway Journal`}</title>
+    <meta name="description" content={description} />
+    <meta
+      name="robots"
+      content={
+        noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large'
+      }
+    />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Bchu Runway Journal"
+      href="/feed.xml"
+    />
+    <meta property="og:site_name" content="Bchu Runway Journal" />
+    <meta property="og:locale" content="th_TH" />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={socialImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
+    {schema && (
+      <script
+        type="application/ld+json"
+        set:html={JSON.stringify(schema).replace(/</g, '\\u003c')}
+      />
+    )}
+  </head>
+  <body>
+    <a href="#main" class="skip-link">
+      Skip to content
+    </a>
+    <div class="brand-header">
+      <header class="site-header">
+        <details class="mobile-menu">
+          <summary aria-label="Open or close navigation">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.25"
+              aria-hidden="true"
+            >
+              <path d="M3 6h18M3 12h18M3 18h18" />
+            </svg>
+            <span class="sr-only">Menu</span>
+          </summary>
+          <nav class="mobile-menu-panel" aria-label="Mobile navigation">
+            <a href="/">The journal</a>
+            {nav.map((term) => (
+              <a href={termPath(term)}>{term.name}</a>
+            ))}
+            <a href="/authors/">Our writers</a>
+            <div class="mobile-shop-links">
+              <a href="https://www.bchurunway.com/clothing">Clothing</a>
+              <a href="https://www.bchurunway.com/brands">Designers</a>
+              <a href="https://www.bchurunway.com/lookbook">Lookbook</a>
+            </div>
+          </nav>
+        </details>
+        <a class="header-note" href="/">
+          THE JOURNAL
+        </a>
+        <a class="wordmark" href="/" aria-label="Bchu Runway Journal home">
+          <img
+            src="/brand/bchu-logo.webp"
+            alt="Bchu Runway"
+            width="299"
+            height="216"
+            decoding="async"
+          />
+        </a>
+        <a class="shop-link" href="https://www.bchurunway.com/">
+          Rent your next look <span aria-hidden="true">↗</span>
+        </a>
+      </header>
+      <nav class="store-nav" aria-label="Bchu Runway website">
+        <a href="https://www.bchurunway.com/clothing">Clothing</a>
+        <a href="https://www.bchurunway.com/brands">Designers</a>
+        <a href="https://www.bchurunway.com/lookbook">Lookbook</a>
+        <a href="/" aria-current="true">
+          Blog
+        </a>
+      </nav>
+    </div>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a
+        href="/"
+        aria-current={Astro.url.pathname === '/' ? 'page' : undefined}
+      >
+        The journal
+      </a>
+      {nav.map((term) => (
+        <a href={termPath(term)}>{term.name}</a>
+      ))}
+      <a href="/authors/">Our writers</a>
+    </nav>
+    <main id="main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div>
+        <a class="wordmark" href="/">
+          <img
+            src="/brand/bchu-logo.webp"
+            alt="Bchu Runway"
+            width="299"
+            height="216"
+            decoding="async"
+          />
+        </a>
+        <p>
+          Good style has a story.
+          <br />
+          Find yours here.
+        </p>
+      </div>
+      <div>
+        <p class="eyebrow">KEEP EXPLORING</p>
+        <a href="/">The journal</a>
+        <a href="/authors/">Meet our writers</a>
+        <a href="/feed.xml">Subscribe via RSS ↗</a>
+      </div>
+      <div>
+        <p class="eyebrow">YOUR NEXT CHAPTER</p>
+        <p>
+          A special occasion. An everyday moment.
+          <br />A wardrobe of possibilities.
+        </p>
+        <a href="https://www.bchurunway.com/">Discover Bchu Runway ↗</a>
+      </div>
+      <div class="footer-bottom">
+        © {new Date().getFullYear()} Bchu Runway{' '}
+        <span>Style, on your terms.</span>
+      </div>
+    </footer>
+  </body>
+</html>

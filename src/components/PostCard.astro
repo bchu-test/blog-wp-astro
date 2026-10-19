@@ -1,0 +1,67 @@
+---
+import { authorPath, dateLabel, termPath, type Post } from '../lib/content';
+interface Props {
+  post: Post;
+  priority?: boolean;
+  featured?: boolean;
+}
+const { post, priority = false, featured = false } = Astro.props;
+---
+
+<article class:list={['post-card', { featured }]}>
+  <a href={post.path} class="card-image" tabindex="-1" aria-hidden="true">
+    {post.image ? (
+      <img
+        src={post.image.src}
+        srcset={post.image.srcset || undefined}
+        sizes={
+          featured
+            ? '(max-width: 760px) 100vw, 65vw'
+            : '(max-width: 600px) 100vw, (max-width: 960px) 50vw, 33vw'
+        }
+        width={post.image.width}
+        height={post.image.height}
+        alt=""
+        loading={priority ? 'eager' : 'lazy'}
+        fetchpriority={priority ? 'high' : 'auto'}
+        decoding="async"
+      />
+    ) : (
+      <span class="image-placeholder">
+        BCHU
+        <br />
+        JOURNAL
+      </span>
+    )}
+    {featured && <span class="image-label">THE LATEST STORY</span>}
+  </a>
+  <div class="card-copy">
+    <div class="eyebrow">
+      {post.categories[0] && (
+        <a href={termPath(post.categories[0])}>{post.categories[0].name}</a>
+      )}
+      <span>{post.minutes} MIN READ</span>
+    </div>
+    <h2>
+      <a href={post.path}>{post.title}</a>
+    </h2>
+    {featured && <p class="card-description">{post.description}</p>}
+    <div class="byline">
+      <a href={authorPath(post.author)}>{post.author.name}</a>
+      <span aria-hidden="true">·</span>
+      <time datetime={post.published}>{dateLabel(post.published)}</time>
+    </div>
+    {post.tags.length > 0 && (
+      <div class="card-tags">
+        {post.tags.slice(0, 3).map((tag) => (
+          <a href={termPath(tag)}>#{tag.name}</a>
+        ))}
+      </div>
+    )}
+    {featured && (
+      <a class="read-story" href={post.path}>
+        Read the story <span aria-hidden="true">↗</span>
+      </a>
+    )}
+  </div>
+</article>
