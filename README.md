@@ -46,12 +46,13 @@ Password-protected articles are excluded.
 
 ## Configuration
 
-| Variable                  | Purpose                                                                    |
-| ------------------------- | -------------------------------------------------------------------------- |
-| `WORDPRESS_URL`           | WordPress installation origin, later your CMS subdomain.                   |
-| `PUBLIC_SITE_URL`         | Canonical reader-facing origin, normally `https://blog.bchurunway.com`.    |
-| `WORDPRESS_PUBLIC_ORIGIN` | Original WordPress origin for rewriting links embedded in old posts.       |
-| `MEDIA_BASE_URL`          | Optional public CDN base containing a full mirror of `wp-content/uploads`. |
+| Variable                  | Purpose                                                                      |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| `WORDPRESS_URL`           | WordPress installation origin, later your CMS subdomain.                     |
+| `PUBLIC_SITE_URL`         | Canonical reader-facing origin, normally `https://blog.bchurunway.com`.      |
+| `WORDPRESS_PUBLIC_ORIGIN` | Original WordPress origin for rewriting links embedded in old posts.         |
+| `MEDIA_BASE_URL`          | Optional public CDN base containing a full mirror of `wp-content/uploads`.   |
+| `WORDPRESS_BUILD_TOKEN`   | Optional secret sent as `X-Bchu-Build-Token` so a firewall can allow builds. |
 
 Secrets must stay in your hosting environment or WordPress configuration.
 Do not commit `.env` or the Netlify build hook URL.
@@ -72,6 +73,16 @@ Actual build usage depends on publishing frequency, API latency, and Netlify's b
 Images load directly from WordPress or your configured CDN, rather than consuming Netlify image-delivery bandwidth.
 Disable unnecessary branch deploys and deploy previews in Netlify if their build usage is not useful to your team.
 Use Netlify's deploy failure notifications to catch builds that were accepted by a hook but subsequently failed.
+
+### Build requests blocked by Cloudflare
+
+WordPress sits behind Cloudflare, which can block Netlify's build servers because they run on cloud-provider IP ranges.
+The build then fails with `WordPress returned HTTP 403 ... (server=cloudflare, ...)`, even though the same request works from your own computer.
+The `cf-ray` value in the error identifies the blocked request in Cloudflare's **Security → Events** log, which names the feature that blocked it.
+
+- **Bot Fight Mode** (Security → Bots) is the usual cause. On the Free plan it cannot be skipped by a WAF rule, so turn it off for this zone, or move WordPress to a CMS hostname on a zone without it.
+- **Custom rules, Security Level, Browser Integrity Check, or Under Attack mode**: set a random `WORDPRESS_BUILD_TOKEN` in Netlify, then add a WAF custom rule with the action **Skip** for those features, matching `http.request.uri.path wildcard "/wp-json/wp/v2/posts*"` and request header `x-bchu-build-token` equal to the same value.
+- A 403 without `server=cloudflare` comes from the WordPress host or a security plugin such as Wordfence; allow the REST API there instead.
 
 ## WordPress rebuild plugin
 

@@ -53,3 +53,26 @@ test('refuses to write an incomplete deployment when API pages overlap', async (
     await assert.rejects(access('.cache/wordpress.json'));
   });
 });
+test('fails fast with Cloudflare diagnostics when the build server is blocked', async () => {
+  await inTemporaryDirectory(async () => {
+    let calls = 0;
+    globalThis.fetch = async (url, options) => {
+      calls++;
+      assert.match(options.headers['User-Agent'], /bchu-blog-astro-build/);
+      return new Response('<html><title>Just a moment...</title></html>', {
+        status: 403,
+        headers: {
+          server: 'cloudflare',
+          'cf-mitigated': 'challenge',
+          'cf-ray': 'abc123-IAD',
+        },
+      });
+    };
+    await assert.rejects(
+      import(`${script.href}?blocked`),
+      /HTTP 403 on page 1 \(server=cloudflare, cf-mitigated=challenge, cf-ray=abc123-IAD, page title "Just a moment\.\.\."\)\. Cloudflare is blocking/,
+    );
+    assert.equal(calls, 1);
+    await assert.rejects(access('.cache/wordpress.json'));
+  });
+});
